@@ -3,10 +3,12 @@ import pandas as pd
 import os
 
 # ------ Exercise 1.1 ------
-os.system('clear')
+os.system("clear")
 con = sqlite3.connect("/Users/bbageon/Downloads/database.sqlite")
 
-tablenames_df = pd.read_sql_query("SELECT name FROM sqlite_master WHERE type='table';", con)
+tablenames_df = pd.read_sql_query(
+    "SELECT name FROM sqlite_master WHERE type='table';", con
+)
 # print(tablenames_df)
 
 for table in tablenames_df.name:
@@ -14,7 +16,7 @@ for table in tablenames_df.name:
     rows_num = pd.read_sql_query(f"SELECT COUNT(*) as rowNum FROM {table}", con)
     print(table)
     print(tablerows_df)
-    print("rows : " , rows_num["rowNum"].iloc[0])
+    print("rows : ", rows_num["rowNum"].iloc[0])
     print(" ")
 
     colinfo_df = pd.read_sql_query(f"PRAGMA table_info({table});", con)
@@ -28,8 +30,9 @@ try:
         """ select count(*)
         from users
         where id not in (select user_id from posts) 
-        and id not in (select user_id from reactions)"""
-    ,con)
+        and id not in (select user_id from reactions)""",
+        con,
+    )
 
     print(result)
 except Exception as e:
@@ -54,14 +57,15 @@ try:
         GROUP by u.id
         order by ER_Post desc
         LIMIT 5;
-        """
-    ,con)
+        """,
+        con,
+    )
     print(result)
 except Exception as e:
     print("Query failed", e)
 
 
-# ------ Exercise 1.4 ------ 
+# ------ Exercise 1.4 ------
 
 try:
     result = pd.read_sql_query(
@@ -72,8 +76,9 @@ try:
         select user_id, content from posts 
         )
         GROUP by user_id, content
-        HAVING count(*) >= 3"""
-    ,con)
+        HAVING count(*) >= 3""",
+        con,
+    )
     print(result)
 except Exception as e:
     print("Query failed", e)
