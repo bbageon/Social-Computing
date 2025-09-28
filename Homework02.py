@@ -61,16 +61,16 @@ try:
         for i in range(len(use_server))
     ]
 
-    # plt.figure()
-    # plt.plot(years, use_server)
-    # plt.xlabel("Years")
-    # plt.ylabel("Required server")
-    # plt.title("Server growth trends")
-    # plt.grid(True)
-    # plt.show()
+    plt.figure()
+    plt.plot(years, use_server)
+    plt.xlabel("Years")
+    plt.ylabel("Required server")
+    plt.title("Server growth trends")
+    plt.grid(True)
+    plt.show()
 
-    # print(use_server, years)
-    # print(result)
+    print(use_server, years)
+    print(result)
 
     # CAGR
     # https://anderson.ae/article/how-to-calculate-cagr
@@ -92,15 +92,15 @@ try:
         future_use_server.append(math.ceil(int(next_value) / events_per_server * 1.2))
         prev_value = next_value
 
-    # plt.figure()
-    # plt.plot(future_years, future_use_server)
-    # plt.xlabel("future years")
-    # plt.ylabel("Prediction use server")
-    # plt.title("Server growth estimation")
-    # plt.grid(True)
-    # plt.xticks(future_years)
-    # plt.show()
-    # print(future_use_server)
+    plt.figure()
+    plt.plot(future_years, future_use_server)
+    plt.xlabel("future years")
+    plt.ylabel("Prediction use server")
+    plt.title("Server growth estimation")
+    plt.grid(True)
+    plt.xticks(future_years)
+    plt.show()
+    print(future_use_server)
 
 except Exception as e:
     print("query failed", e)
@@ -130,7 +130,7 @@ try:
         con,
     )
 
-    # print(result)
+    print(result)
 
 
 except Exception as e:
