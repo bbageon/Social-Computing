@@ -1241,6 +1241,8 @@ def moderate_content(content):
     moderated_content = content
     score = 0.0
 
+    # print(TIER1_WORDS, TIER2_PHRASES, TIER3_WORDS)
+
     # rules 1.1.1
     # A case-insensitive, whole-word search is performed against the Tier 1 Word List. If a match is found, the function immediately returns the string [content removed due to severe violation] and a fixed Content Score of 5.0.
     for words in TIER1_WORDS:
@@ -1299,7 +1301,8 @@ def moderate_content(content):
     #     moderated_content = moderated_content.replace("www.", "[Link removed]")
     #     score += 2.0 * cnt
 
-    url_pattern = r"(https?://\S+|www\.\S+)"
+    url_pattern = r"(https?://\S+|www\.\S+|[a-zA-Z0-9-]+\.(com|net|org|io|co|info|biz|click|top|xyz)(/\S*)?)"
+    # url_pattern = r"(https?://\S+|www\.\S+)"
     IsVioURL = re.findall(url_pattern, moderated_content, re.IGNORECASE)
     if len(IsVioURL) > 0:
         moderated_content = re.sub(
