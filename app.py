@@ -205,6 +205,8 @@ def feed():
             }
         )
 
+    # 건우
+
     #  4. Render Template with Pagination Info
     return render_template(
         "feed.html.j2",
@@ -823,9 +825,20 @@ def admin_dashboard():
     ]
     total_posts_pages = (total_posts_count + PAGE_SIZE - 1) // PAGE_SIZE
 
+    # posts_raw = query_db(
+    #     f"""
+    #     SELECT p.id, p.content, p.created_at, u.username, u.created_at as user_created_at
+    #     FROM posts p JOIN users u ON p.user_id = u.id
+    #     ORDER BY p.id DESC -- Order by ID for consistent pagination before risk sort
+    #     LIMIT ? OFFSET ?
+    # """,
+    #     (PAGE_SIZE, posts_offset),
+    # )
+
+    # Change Query (Added select p.report_count)
     posts_raw = query_db(
         f"""
-        SELECT p.id, p.content, p.created_at, u.username, u.created_at as user_created_at
+        SELECT p.id, p.content, p.created_at, p.report_count, u.username, u.created_at as user_created_at
         FROM posts p JOIN users u ON p.user_id = u.id
         ORDER BY p.id DESC -- Order by ID for consistent pagination before risk sort
         LIMIT ? OFFSET ?
@@ -841,6 +854,14 @@ def admin_dashboard():
         author_age_days = (datetime.utcnow() - author_created_dt).days
         if author_age_days < 7:
             final_score *= 1.5
+
+        # New rules
+        if post_dict["report_count"] > 0:
+            final_score += 4
+            print("123123")
+        else:
+            final_score *= 0.9
+
         risk_label, risk_sort_key = get_risk_profile(final_score)
         post_dict["risk_label"] = risk_label
         post_dict["risk_sort_key"] = risk_sort_key
@@ -968,6 +989,26 @@ def loop_color(user_id):
     g = int(h[2:4], 16)
     b = int(h[4:6], 16)
     return f"rgb({r % 128 + 80}, {g % 128 + 80}, {b % 128 + 80})"
+
+
+@app.route("/report/<int:post_id>", methods=["POST"])
+def report_post(post_id):
+    """
+    Increments the report count for a post when a user reports it.
+    """
+    reason = request.form.get("reason")
+
+    query_db(
+        """
+        UPDATE posts
+        SET report_count = COALESCE(report_count, 0) + 1
+        WHERE id = ?
+        """,
+        (post_id,),
+        commit=True,
+    )
+    flash("Thank you for your report. The post has been flagged for review.", "success")
+    return redirect(request.referrer)
 
 
 # ----- Functions to be implemented are below
@@ -1336,5 +1377,29 @@ def moderate_content(content):
     return moderated_content, score
 
 
-if __name__ == "__main__":  #
+def add_report_column():
+    with app.app_context():
+        db = get_db()
+        try:
+            db
+            with db:
+                # db.execute("ALTER TABLE posts DROP COLUMN report_count;")
+                # print(" Column 'report_count' successfully deleted.")
+                columns = [
+                    row["name"]
+                    for row in db.execute("PRAGMA table_info(posts);").fetchall()
+                ]
+                if "report_count" not in columns:
+                    db.execute(
+                        "ALTER TABLE posts ADD COLUMN report_count INTEGER DEFAULT 0;"
+                    )
+                    print("report_count create success")
+                else:
+                    print("Already Exist attribute")
+        except sqlite3.Error as e:
+            print(f"Database error: {e}")
+
+
+if __name__ == "__main__":
+    add_report_column()
     app.run(debug=True, port=8080)

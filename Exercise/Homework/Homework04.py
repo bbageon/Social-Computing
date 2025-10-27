@@ -16,6 +16,7 @@
 
 import re
 import nltk
+import matplotlib.pyplot as plt
 
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from nltk.corpus import stopwords
@@ -121,14 +122,63 @@ print("\n=== Top 10 Topics ===")
 for idx, topic in lda_model.show_topics(num_topics=10, num_words=6, formatted=False):
     print(f"Topic {idx+1}: {[word for word, prob in topic]}")
 
-# === 감정 분석 ===
-sia = SentimentIntensityAnalyzer()
+# Emotion Analysis
+# https://www.nltk.org/howto/sentiment.html?utm_source=chatgpt.com
+# Library load
+E_A = SentimentIntensityAnalyzer()
+
+
 posts["compound"] = (
-    posts["content"].astype(str).apply(lambda x: sia.polarity_scores(x)["compound"])
+    posts["content"].astype(str).apply(lambda x: E_A.polarity_scores(x)["compound"])
 )
 posts["sentiment"] = posts["compound"].apply(
     lambda x: "positive" if x > 0.05 else "negative" if x < -0.05 else "neutral"
 )
 
-print("\n=== Sentiment Distribution ===")
+print("\n=== Platform Sentiment Distribution ===")
 print(posts["sentiment"].value_counts(normalize=True))
+
+
+# === 4.2 Topic-wise Sentiment Analysis ===
+# Top topic set
+def get_main_topic(tokens):
+    if not tokens:
+        return None
+    bow = dictionary.doc2bow(tokens)
+    topic_probs = lda_model.get_document_topics(bow)
+    if not topic_probs:
+        return None
+    # 가장 확률이 높은 토픽 번호 반환
+    # print(topic_probs, "123")
+    return max(topic_probs, key=lambda x: x[1])[0]
+
+
+# main_topic 열 생성
+posts["main_topic"] = posts["tokens"].apply(get_main_topic)
+
+# Topic-wise sentiment rate(positive / neutral / negative) ===
+sentiment_by_topic = (
+    posts.groupby(["main_topic", "sentiment"]).size().unstack(fill_value=0).sort_index()
+)
+
+# 비율 계산
+sentiment_by_topic_ratio = sentiment_by_topic.div(
+    sentiment_by_topic.sum(axis=1), axis=0
+)
+
+print("\n=== Sentiment Ratio by Topic ===")
+print(sentiment_by_topic_ratio)
+
+# plt.figure(figsize=(10, 6))
+# sentiment_by_topic_ratio.plot(
+#     kind="bar",
+#     stacked=True,
+#     colormap="RdYlGn",
+#     figsize=(10, 6),
+# )
+# plt.title("Sentiment Distribution by LDA Topic")
+# plt.xlabel("LDA Topic Number")
+# plt.ylabel("Proportion")
+# plt.legend(title="Sentiment", loc="upper right")
+# plt.tight_layout()
+# plt.show()
